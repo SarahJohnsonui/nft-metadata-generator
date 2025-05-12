@@ -1,0 +1,22 @@
+{
+  "name": "nft-metadata-generator",
+  "version": "0.1.0",
+  "description": "A tool to generate NFT metadata for collections",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "nft",
+    "metadata",
+    "generator",
+    "opensea",
+    "blockchain"
+  ],
+  "author": "SarahJohnsonui",
+  "license": "MIT",
+  "dependencies": {
+    "fs-extra": "^11.1.0"
+  }
+}
