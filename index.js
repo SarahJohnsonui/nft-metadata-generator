@@ -32,6 +32,19 @@ function generateSampleMetadata() {
   );
 }
 
+async function writeMetadataToFile(metadata, tokenId) {
+  try {
+    const fileName = `${tokenId}.json`;
+    const filePath = path.join(outputDir, fileName);
+    await fs.writeJSON(filePath, metadata, { spaces: 2 });
+    console.log(`Metadata written to: ${fileName}`);
+    return filePath;
+  } catch (error) {
+    console.error(`Error writing metadata for token ${tokenId}:`, error.message);
+    throw error;
+  }
+}
+
 async function init() {
   try {
     await fs.ensureDir(outputDir);
@@ -40,6 +53,9 @@ async function init() {
     const sampleData = generateSampleMetadata();
     console.log('Generated sample metadata:', JSON.stringify(sampleData, null, 2));
     
+    await writeMetadataToFile(sampleData, sampleData.tokenId);
+    
+    console.log('Sample metadata file created successfully!');
     console.log('Ready to generate NFT metadata!');
   } catch (error) {
     console.error('Error during initialization:', error.message);
