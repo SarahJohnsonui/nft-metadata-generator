@@ -45,18 +45,36 @@ async function writeMetadataToFile(metadata, tokenId) {
   }
 }
 
+async function generateBatch(count, collectionName = "My NFT Collection") {
+  console.log(`Starting batch generation of ${count} NFTs...`);
+  
+  for (let i = 1; i <= count; i++) {
+    const metadata = generateMetadata(
+      i,
+      `${collectionName} #${i}`,
+      `A unique NFT from ${collectionName}`,
+      `https://gateway.pinata.cloud/ipfs/YOUR_HASH/${i}.png`,
+      [
+        { trait_type: "Background", value: "Default" },
+        { trait_type: "Type", value: "Standard" }
+      ]
+    );
+    
+    await writeMetadataToFile(metadata, i);
+  }
+  
+  console.log(`✅ Generated ${count} metadata files!`);
+}
+
 async function init() {
   try {
     await fs.ensureDir(outputDir);
     console.log('Output directory ready');
     
-    const sampleData = generateSampleMetadata();
-    console.log('Generated sample metadata:', JSON.stringify(sampleData, null, 2));
+    // Generate 5 sample NFTs
+    await generateBatch(5, "Sample Collection");
     
-    await writeMetadataToFile(sampleData, sampleData.tokenId);
-    
-    console.log('Sample metadata file created successfully!');
-    console.log('Ready to generate NFT metadata!');
+    console.log('Batch generation completed!');
   } catch (error) {
     console.error('Error during initialization:', error.message);
   }

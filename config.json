@@ -1,0 +1,18 @@
+{
+  "collection": {
+    "name": "My NFT Collection",
+    "description": "A collection of unique NFTs",
+    "baseImageUrl": "https://gateway.pinata.cloud/ipfs/YOUR_HASH",
+    "totalSupply": 1000
+  },
+  "attributes": {
+    "Background": ["Blue", "Red", "Green", "Purple", "Yellow"],
+    "Body": ["Robot", "Human", "Alien", "Monster"],
+    "Eyes": ["Normal", "Laser", "Glow", "Closed"],
+    "Accessory": ["None", "Hat", "Glasses", "Necklace"]
+  },
+  "output": {
+    "directory": "./output",
+    "format": "json"
+  }
+}
