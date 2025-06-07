@@ -4,7 +4,8 @@ const path = require('path');
 console.log('NFT Metadata Generator v0.1.0');
 console.log('Starting up...');
 
-const outputDir = './output';
+let config;
+let outputDir = './output';
 
 function generateMetadata(tokenId, name, description, imageUrl, attributes = []) {
   return {
@@ -16,20 +17,42 @@ function generateMetadata(tokenId, name, description, imageUrl, attributes = [])
   };
 }
 
-function generateSampleMetadata() {
-  const sampleAttributes = [
-    { trait_type: "Background", value: "Blue" },
-    { trait_type: "Body", value: "Robot" },
-    { trait_type: "Eyes", value: "Laser" }
-  ];
+function getRandomAttribute(traitType, options) {
+  const randomIndex = Math.floor(Math.random() * options.length);
+  return { trait_type: traitType, value: options[randomIndex] };
+}
+
+function generateRandomAttributes(attributesConfig) {
+  const attributes = [];
   
-  return generateMetadata(
-    1,
-    "Sample NFT #1", 
-    "This is a sample NFT for testing",
-    "https://example.com/image/1.png",
-    sampleAttributes
-  );
+  for (const [traitType, options] of Object.entries(attributesConfig)) {
+    attributes.push(getRandomAttribute(traitType, options));
+  }
+  
+  return attributes;
+}
+
+async function loadConfig() {
+  try {
+    const configPath = path.join(__dirname, 'config.json');
+    config = await fs.readJSON(configPath);
+    outputDir = config.output.directory;
+    console.log('Configuration loaded successfully');
+  } catch (error) {
+    console.log('Using default configuration');
+    config = {
+      collection: {
+        name: "Default Collection",
+        description: "Default collection",
+        baseImageUrl: "https://example.com",
+        totalSupply: 100
+      },
+      attributes: {
+        "Background": ["Blue", "Red"],
+        "Type": ["Standard", "Rare"]
+      }
+    };
+  }
 }
 
 async function writeMetadataToFile(metadata, tokenId) {
@@ -45,22 +68,26 @@ async function writeMetadataToFile(metadata, tokenId) {
   }
 }
 
-async function generateBatch(count, collectionName = "My NFT Collection") {
+async function generateBatch(count) {
   console.log(`Starting batch generation of ${count} NFTs...`);
   
   for (let i = 1; i <= count; i++) {
+    const randomAttributes = generateRandomAttributes(config.attributes);
+    const imageUrl = `${config.collection.baseImageUrl}/${i}.png`;
+    
     const metadata = generateMetadata(
       i,
-      `${collectionName} #${i}`,
-      `A unique NFT from ${collectionName}`,
-      `https://gateway.pinata.cloud/ipfs/YOUR_HASH/${i}.png`,
-      [
-        { trait_type: "Background", value: "Default" },
-        { trait_type: "Type", value: "Standard" }
-      ]
+      `${config.collection.name} #${i}`,
+      `${config.collection.description} - Token ${i}`,
+      imageUrl,
+      randomAttributes
     );
     
     await writeMetadataToFile(metadata, i);
+    
+    if (i % 10 === 0) {
+      console.log(`Generated ${i}/${count} metadata files...`);
+    }
   }
   
   console.log(`✅ Generated ${count} metadata files!`);
@@ -68,11 +95,12 @@ async function generateBatch(count, collectionName = "My NFT Collection") {
 
 async function init() {
   try {
+    await loadConfig();
     await fs.ensureDir(outputDir);
     console.log('Output directory ready');
     
-    // Generate 5 sample NFTs
-    await generateBatch(5, "Sample Collection");
+    // Generate 10 random NFTs
+    await generateBatch(10);
     
     console.log('Batch generation completed!');
   } catch (error) {
