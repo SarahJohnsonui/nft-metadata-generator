@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
+const { getWeightedRandomAttribute, calculateRarityScore } = require('./rarity');
 
 console.log('NFT Metadata Generator v0.1.0');
 console.log('Starting up...');
@@ -8,12 +9,15 @@ let config;
 let outputDir = './output';
 
 function generateMetadata(tokenId, name, description, imageUrl, attributes = []) {
+  const rarityScore = calculateRarityScore(attributes);
+  
   return {
     name: name,
     description: description,
     image: imageUrl,
     attributes: attributes,
-    tokenId: tokenId
+    tokenId: tokenId,
+    rarityScore: rarityScore
   };
 }
 
@@ -22,11 +26,15 @@ function getRandomAttribute(traitType, options) {
   return { trait_type: traitType, value: options[randomIndex] };
 }
 
-function generateRandomAttributes(attributesConfig) {
+function generateRandomAttributes(attributesConfig, useRarity = true) {
   const attributes = [];
   
   for (const [traitType, options] of Object.entries(attributesConfig)) {
-    attributes.push(getRandomAttribute(traitType, options));
+    if (useRarity) {
+      attributes.push(getWeightedRandomAttribute(traitType, options));
+    } else {
+      attributes.push(getRandomAttribute(traitType, options));
+    }
   }
   
   return attributes;
