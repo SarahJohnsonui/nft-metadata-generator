@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const { getWeightedRandomAttribute, calculateRarityScore } = require('./rarity');
+const { validateMetadata, validateConfig } = require('./validator');
 
 console.log('NFT Metadata Generator v0.1.0');
 console.log('Starting up...');
@@ -44,8 +45,17 @@ async function loadConfig() {
   try {
     const configPath = path.join(__dirname, 'config.json');
     config = await fs.readJSON(configPath);
-    outputDir = config.output.directory;
-    console.log('Configuration loaded successfully');
+    outputDir = config.output?.directory || './output';
+    
+    // Validate configuration
+    const validation = validateConfig(config);
+    if (!validation.isValid) {
+      console.error('Configuration validation failed:');
+      validation.errors.forEach(error => console.error(`  - ${error}`));
+      throw new Error('Invalid configuration');
+    }
+    
+    console.log('Configuration loaded and validated successfully');
   } catch (error) {
     console.log('Using default configuration');
     config = {
@@ -65,6 +75,14 @@ async function loadConfig() {
 
 async function writeMetadataToFile(metadata, tokenId) {
   try {
+    // Validate metadata before writing
+    const validation = validateMetadata(metadata);
+    if (!validation.isValid) {
+      console.error(`Validation failed for token ${tokenId}:`);
+      validation.errors.forEach(error => console.error(`  - ${error}`));
+      return null;
+    }
+    
     const fileName = `${tokenId}.json`;
     const filePath = path.join(outputDir, fileName);
     await fs.writeJSON(filePath, metadata, { spaces: 2 });
@@ -101,19 +119,30 @@ async function generateBatch(count) {
   console.log(`✅ Generated ${count} metadata files!`);
 }
 
-async function init() {
+async function main() {
+  const args = process.argv.slice(2);
+  const count = args[0] ? parseInt(args[0]) : 10;
+  
+  if (isNaN(count) || count <= 0) {
+    console.error('Please provide a valid number of NFTs to generate');
+    console.log('Usage: node index.js [count]');
+    console.log('Example: node index.js 100');
+    return;
+  }
+  
   try {
     await loadConfig();
     await fs.ensureDir(outputDir);
     console.log('Output directory ready');
+    console.log(`Generating ${count} NFTs from ${config.collection.name}...`);
     
-    // Generate 10 random NFTs
-    await generateBatch(10);
+    await generateBatch(count);
     
-    console.log('Batch generation completed!');
+    console.log('Generation completed!');
+    console.log(`Check the ${outputDir} folder for your metadata files.`);
   } catch (error) {
-    console.error('Error during initialization:', error.message);
+    console.error('Error during generation:', error.message);
   }
 }
 
-init();
+main();
