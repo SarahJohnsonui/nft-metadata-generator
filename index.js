@@ -119,14 +119,60 @@ async function generateBatch(count) {
   console.log(`✅ Generated ${count} metadata files!`);
 }
 
+function previewMetadata(metadata) {
+  console.log('\n--- METADATA PREVIEW ---');
+  console.log(`Name: ${metadata.name}`);
+  console.log(`Description: ${metadata.description}`);
+  console.log(`Token ID: ${metadata.tokenId}`);
+  console.log(`Rarity Score: ${metadata.rarityScore}`);
+  console.log('Attributes:');
+  metadata.attributes.forEach(attr => {
+    console.log(`  ${attr.trait_type}: ${attr.value}`);
+  });
+  console.log(`Image: ${metadata.image}`);
+  console.log('--- END PREVIEW ---\n');
+}
+
 async function main() {
   const args = process.argv.slice(2);
-  const count = args[0] ? parseInt(args[0]) : 10;
+  const command = args[0];
+  
+  // Handle preview command
+  if (command === 'preview') {
+    try {
+      await loadConfig();
+      console.log('\n🔍 Generating sample metadata preview...');
+      
+      const randomAttributes = generateRandomAttributes(config.attributes);
+      const imageUrl = `${config.collection.baseImageUrl}/preview.png`;
+      
+      const sampleMetadata = generateMetadata(
+        1,
+        `${config.collection.name} #1`,
+        `${config.collection.description} - Preview`,
+        imageUrl,
+        randomAttributes
+      );
+      
+      previewMetadata(sampleMetadata);
+      return;
+    } catch (error) {
+      console.error('Error during preview:', error.message);
+      return;
+    }
+  }
+  
+  // Handle normal generation
+  const count = command ? parseInt(command) : 10;
   
   if (isNaN(count) || count <= 0) {
     console.error('Please provide a valid number of NFTs to generate');
-    console.log('Usage: node index.js [count]');
-    console.log('Example: node index.js 100');
+    console.log('Usage:');
+    console.log('  node index.js [count]     - Generate metadata files');
+    console.log('  node index.js preview     - Preview sample metadata');
+    console.log('Examples:');
+    console.log('  node index.js 100');
+    console.log('  node index.js preview');
     return;
   }
   
